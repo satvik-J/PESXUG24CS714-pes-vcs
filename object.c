@@ -51,6 +51,7 @@ int object_exists(const ObjectID *id) {
 
 // ─── IMPLEMENTATION ─────────────────────────────────────────────────────────
 
+// Write object
 int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out) {
     const char *type_str;
 
@@ -59,7 +60,7 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
     else if (type == OBJ_COMMIT) type_str = "commit";
     else return -1;
 
-    // Create header: "type size\0"
+    // Header: "type size\0"
     char header[64];
     int header_len = snprintf(header, sizeof(header), "%s %zu", type_str, len) + 1;
 
@@ -84,7 +85,7 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
     char path[512];
     object_path(id_out, path, sizeof(path));
 
-    // Create required directories
+    // Create directories
     mkdir(".pes", 0755);
     mkdir(".pes/objects", 0755);
 
@@ -96,7 +97,7 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
         mkdir(dir, 0755);
     }
 
-    // Temporary file
+    // Temp file
     char temp_path[512];
     snprintf(temp_path, sizeof(temp_path), "%s.tmp", path);
 
@@ -125,8 +126,7 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
     return 0;
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-
+// Read object
 int object_read(const ObjectID *id, ObjectType *type_out, void **data_out, size_t *len_out) {
     char path[512];
     object_path(id, path, sizeof(path));
