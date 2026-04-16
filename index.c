@@ -40,10 +40,10 @@ int index_remove(Index *index, const char *path) {
 int index_load(Index *index) {
     FILE *f = fopen(".pes/index", "r");
 
-    // ✅ IMPORTANT FIX: if file doesn't exist → empty index
+    // 🔥 THIS LINE FIXES YOUR ERROR
     if (!f) {
         index->count = 0;
-        return 0;
+        return 0;   // NOT error
     }
 
     index->count = 0;
@@ -62,7 +62,6 @@ int index_load(Index *index) {
         if (res != 5) break;
 
         hex_to_hash(hash_hex, &entry.id);
-
         index->entries[index->count++] = entry;
     }
 
