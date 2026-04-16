@@ -60,23 +60,20 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
     else if (type == OBJ_COMMIT) type_str = "commit";
     else return -1;
 
-    // Header: "type size\0"
+    // Header
     char header[64];
     int header_len = snprintf(header, sizeof(header), "%s %zu", type_str, len) + 1;
 
     size_t total_len = header_len + len;
 
-    // Combine header + data
     char *full = malloc(total_len);
     if (!full) return -1;
 
     memcpy(full, header, header_len);
     memcpy(full + header_len, data, len);
 
-    // Compute hash
     compute_hash(full, total_len, id_out);
 
-    // Deduplication
     if (object_exists(id_out)) {
         free(full);
         return 0;
@@ -85,17 +82,17 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
     char path[512];
     object_path(id_out, path, sizeof(path));
 
-    // Create directories
+    // 🔥 CRITICAL FIX: create full directory chain properly
     mkdir(".pes", 0755);
     mkdir(".pes/objects", 0755);
 
+    char hex[65];
+    hash_to_hex(id_out, hex);
+
     char dir[512];
-    strncpy(dir, path, sizeof(dir));
-    char *slash = strrchr(dir, '/');
-    if (slash) {
-        *slash = '\0';
-        mkdir(dir, 0755);
-    }
+    snprintf(dir, sizeof(dir), ".pes/objects/%.2s", hex);
+
+    mkdir(dir, 0755);
 
     // Temp file
     char temp_path[512];
@@ -125,7 +122,6 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
     free(full);
     return 0;
 }
-
 // Read object
 int object_read(const ObjectID *id, ObjectType *type_out, void **data_out, size_t *len_out) {
     char path[512];
